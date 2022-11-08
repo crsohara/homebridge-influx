@@ -6,8 +6,15 @@ const TEMPERATURE_SENSOR_NAME = 'temperature';
 const HUMIDITY_SENSOR_NAME = 'humidity';
 
 const getLastMeasurement = (influx, service, schema, cb) => {
+
+  const query = [`SELECT LAST("${schema[service].field}") FROM ${schema[service].measurement}`]
+
+  if (schema[service].tag_key && schema[service].tag_value) {
+    query.push(`WHERE "${schema[service].tag_key}" = '${schema[service].tag_value}'`)
+  }
+
   influx
-    .query(`SELECT LAST("${schema[service].field}") FROM ${schema[service].measurement}`)
+    .query(query.join(' '))
     .then(result => cb(null, result[0] == null ? -1 : result[0].last))
     .catch(err => cb(err));
 };
